@@ -6,11 +6,11 @@ require('dotenv').config();
 
 const app = express();
 const MOVIE = require('./movie.json');
-const PORT = 8000;
+const PORT = process.env.PORT || 8000;
 
-console.log(process.env.API_TOKEN, 'test API Key'); 
+const morganSetting = process.env.NODE_ENV === 'production' ? 'tiny' : 'dev';
 
-app.use(morgan('dev'));
+app.use(morgan(morganSetting));
 app.use(cors());
 app.use(helmet());
 app.use(validateBearerToken);
@@ -54,5 +54,15 @@ function handleMovieGet(req, res) {
     }
     res.json(response);
 }
+
+app.use((error, req, res, next) => {
+    let response;
+    if(process.env.NODE_ENV === 'production') {
+        response = { error: { message: 'server error' }}
+    } else {
+        response = { error };
+    }
+    res.status(500).json(response);
+})
 
 app.listen(PORT, () => console.log(`Server is crankin at http://localhost:${PORT}`));
